@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echoserveringressresource
+spec:
+  rules:
+  - host: echo.mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001.au-syd.containers.appdomain.cloud 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: echoserverservice
+            port:
+              number: 8080

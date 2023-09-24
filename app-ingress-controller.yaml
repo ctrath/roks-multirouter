@@ -1,0 +1,14 @@
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: approuter
+  namespace: openshift-ingress-operator
+spec:
+  defaultCertificate:
+    name: mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001
+  domain: mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001.au-syd.containers.appdomain.cloud
+  namespaceSelector:
+    matchLabels:
+      router: app
+  routeAdmission:
+    namespaceOwnership: InterNamespaceAllowed

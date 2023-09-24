@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type: public
+  labels:
+    app: router
+    ingresscontroller.operator.openshift.io/owning-ingresscontroller: approuter
+    router: approuter
+  name: approuter
+  namespace: openshift-ingress
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    ingresscontroller.operator.openshift.io/deployment-ingresscontroller: approuter
+  sessionAffinity: None
+  type: LoadBalancer
