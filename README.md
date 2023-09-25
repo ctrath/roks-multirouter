@@ -2,7 +2,7 @@
 IBM Redhat Openshift Kubernetes Service - multiple router example
 
 
-#### Create a load balancer service
+### Create a load balancer service
 I'm creating a load balancer service in order to generate a public entrypoint into
 my router.  The load balancer service will create a public VPC ALB.
 
@@ -11,10 +11,14 @@ connect to the router over the private network, you may wish to create a private
 service or a Nodeport service instead.
 
 Apply load balancer -
+
 `kubectl apply -f app-ingress-controller-lb-service.yaml`
 
-Check load balancer status-
+
+Check load balancer status -
+
 `kubectl describe svc -n openshift-ingress approuter`
+
 
 You want to make sure the load balancer is started.  A healthy, started ALB will have
 a status that looks similar to this:
@@ -28,7 +32,7 @@ Events:
 Note: `EnsuredLoadBalancer` denotes that the ALB is ready
 
 
-#### Create a domain and certificate for the load balancer
+### Create a domain and certificate for the load balancer
 I'm creating a domain and certificate for my secondary router as I don't have one
 already to use.  If you already have a domain and certificate, you can skip this section
 and store the certificate in a secret in the cluster that the secondary router can access
@@ -36,7 +40,7 @@ for TLS enablement.
 
 Get the name of your cluster:
 ```
->ibmcloud ks cluster ls
+> ibmcloud ks cluster ls
 OK
 Name                          ID                     State    Created       Workers   Location   Version                  Resource Group Name   Provider
 mycluster-au-syd-1-bx2.4x16   ck5jlt1s01b1sr0pdrd0   normal   1 day ago     4         Sydney     4.13.11_1540_openshift   default               vpc-gen2
@@ -44,7 +48,7 @@ mycluster-au-syd-1-bx2.4x16   ck5jlt1s01b1sr0pdrd0   normal   1 day ago     4   
 
 Get the domain name of your ALB that was created in the previous section:
 ```
->kubectl get svc -n openshift-ingress
+> kubectl get svc -n openshift-ingress
 NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP                          PORT(S)                      AGE
 approuter                 LoadBalancer   172.21.40.13    3f6b8d29-au-syd.lb.appdomain.cloud   80:31898/TCP,443:31987/TCP   18m
 router-default            LoadBalancer   172.21.175.57   c20f5384-au-syd.lb.appdomain.cloud   80:32605/TCP,443:32761/TCP   47h
@@ -54,7 +58,7 @@ router-internal-default   ClusterIP      172.21.17.208   <none>                 
 Create a domain name and certificate for the load balancer service:
 
 ```
->ibmcloud ks nlb-dns create vpc-gen2 -c mycluster-au-syd-1-bx2.4x16 --secret-namespace openshift-ingress --type public --lb-host 3f6b8d29-au-syd.lb.appdomain.cloud
+> ibmcloud ks nlb-dns create vpc-gen2 -c mycluster-au-syd-1-bx2.4x16 --secret-namespace openshift-ingress --type public --lb-host 3f6b8d29-au-syd.lb.appdomain.cloud
 ```
 
 Check the status of the domain and certificate creation:
@@ -66,7 +70,7 @@ mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0000.au-syd.container
 mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001.au-syd.containers.appdomain.cloud   3f6b8d29-au-syd.lb.appdomain.cloud   created           mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001   openshift-ingress   OK
 ```
 
-Note: match the Target domain name, in this case `3f6b8d29-au-syd.lb.appdomain.cloud`, with the load balancer service `EXTERNAL-IP` that was listed earlier.  When the domain and certificate are created, the Status indicate `OK`
+Note: match the Target domain name, in this case `3f6b8d29-au-syd.lb.appdomain.cloud`, with the load balancer service `EXTERNAL-IP` that was listed earlier.  When the domain and certificate are created, the Status indicates `OK`
 
 
 Check to make sure the certificate was generated:
@@ -89,7 +93,7 @@ router-token-ppd6f                                                kubernetes.io/
 
 Note: the secret `mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001` contains the certificate that we're interested in and can be mapped to the domain name that was listed in the previous step.
 
-#### Modify the ingress controller yaml in this repo with your domain and certificate (app-ingress-controller.yaml)
+### Modify the ingress controller yaml in this repo with your domain and certificate (app-ingress-controller.yaml)
 ```
 apiVersion: v1
 items:
@@ -115,7 +119,9 @@ You will need to modify following fields accordingly:
  - spec.namespaceSelector.matchLabels
 
 Save and apply the yaml:
+
 `kubectl apply -f app-ingress-controller.yaml`
+
 
 Validate the ingress controller is deployed:
 ```
@@ -128,8 +134,8 @@ default     2d1h
 Note: as you can see in the output from the command above, the new ingress controller `approuter` is deployed
 
 
-#### Application deploy and ingress resource definition
-In the namespace which you want to serve up application from the new ingress controller,
+### Application deploy and ingress resource definition
+In the namespaces which you want to serve up applications from the new ingress controller,
 you need to add an annotation on each namespace that you want it to serve:
 
 `kubectl label namespace default router=app`
@@ -186,7 +192,7 @@ Request Body:
 ```
 
 
-#### Restricing default ingress from accessing application namespaces
+### Restricting default ingress from accessing application namespaces
 
 We're not done yet.  The default ingress controller still has access to the ingress resource in all namespaces,
 including the default namespace.  You can test this by running a curl against the default ingress host with
@@ -229,9 +235,11 @@ Request Body:
 	-no body in request-
 ```
 
-So, in order to prevent the default ingress controller from access the default namespace and only serve up the console, we'll add a
-namespace selector the default ingress controller and also annotate the openshift-console namespace.
+So, in order to prevent the default ingress controller from accessing the default namespace and only serve up the console, we'll add a
+namespace selector to the default ingress controller and also annotate the openshift-console namespace.
+
 `kubectl edit ingresscontroller -n openshift-ingress-operator default`
+
 
 Add the namespaceSelector to look something like this and save the ingressController resource:
 ```
@@ -282,9 +290,13 @@ status:
 ```
 
 Now, annotate the openshift-console namespace so the default ingress controller has access:
+
 `❯ kubectl label namespace openshift-console router=default`
+
 
 Now, if you rerun the curl that was ran earlier, attempting to access the openshift console using the application ingress
 controller domain, you will no longer have access, though you will still have access using the default ingress controller domain:
+
 `❯ curl --header "Host: echo.mycluster-au-syd-1-bx2-4x-aa26ccd186043d00655b29246b83475c-0001.au-syd.containers.appdomain.cloud" c20f5384-au-syd.lb.appdomain.cloud`
 
+Note: you should see a HTML response containing `Application is not available`
